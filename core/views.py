@@ -29,20 +29,6 @@ class TaskGenericApiView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
         serializer.save(owner=self.request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    def perform_update(self, serializer):
-        queryset = Task.objects.filter(id=self.kwargs['pk']).first()
-        if queryset:
-            if queryset.owner == self.request.user:
-                serializer.save(owner=self.request.user)
-                return Response(self.serializer_class(queryset, many=False).data, status=status.HTTP_200_OK)
-            else:
-                return Response({'detail': 'You do not have permission to update'}, status=status.HTTP_403_FORBIDDEN)
-        else:
-            return Response({'detail': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
-
     def delete(self, request, *args, **kwargs):
         return self.delete(request, *args, **kwargs)
 
@@ -61,3 +47,21 @@ def register(request, *args, **kwargs):
                              "token": token.key},
                             status=status.HTTP_201_CREATED)
         return Response({"Message": f"{serializer.errors}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+def update(request, *args, **kwargs):
+    queryset = Task.objects.filter(id=kwargs['pk']).first()
+    serializer = TaskSerializer(queryset, data=request.data)
+    if queryset:
+        token = request.headers.get('Authorization').split(" ")[1]
+        token_data = Token.objects.get(key=token)
+        if queryset.owner.id == token_data.user.id:
+            if serializer.is_valid():
+                serializer.save(owner=token_data.user)
+                return Response(TaskSerializer(queryset, many=False).data, status=status.HTTP_200_OK)
+            return Response({"detail": f"Bad Request\n{serializer.errors}"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+    else:
+        return Response({'detail': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
