@@ -1,0 +1,62 @@
+### create a user and get a token, it doesnot expire
+POST http://localhost:8000/register/
+Content-Type: application/json
+
+{
+  "username": "django1",
+  "password": "@Djang0_.",
+  "email": "django@gmail.com",
+  "first_name": "rest",
+  "last_name": "framework"
+}
+
+### obtaining a token throught login.
+POST http://localhost:8000/obtain-token/
+Content-Type: application/json
+
+{
+  "username": "django1",
+  "password": "@Djang0_."
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+%}
+
+### usind token to  create a to do
+POST http://localhost:8000/
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "name": "Buy groceries today",
+  "description": "Buy milk, eggs, and bread"
+}
+
+### Using Token to get users to-dos.
+GET http://localhost:8000/
+Authorization: Bearer {{auth_token}}
+
+### Using Token to get a single to-do
+GET http://localhost:8000/11/
+Authorization: Bearer {{auth_token}}
+
+### Using Token to update a to do
+PUT http://localhost:8000/1/
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "name": "Buy groceries tomorrow",
+  "description": "Buy milk, eggs, and bread"
+}
+
+### Using Token to get a single to-do
+GET http://localhost:8000/
+Authorization: Bearer {{auth_token}}
+
+### Using Token to get a single to-do
+GET http://localhost:8000/
+Authorization: Bearer {{auth_token}}
+
+
