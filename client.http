@@ -42,12 +42,12 @@ GET http://localhost:8000/11/
 Authorization: Bearer {{auth_token}}
 
 ### Using Token to update a to do
-PUT http://localhost:8000/1/
+PUT http://localhost:8000/11/
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-  "name": "Buy groceries tomorrow",
+  "name": "Buy groceries tomorrow again",
   "description": "Buy milk, eggs, and bread"
 }
 
