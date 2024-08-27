@@ -5,10 +5,11 @@ from rest_framework import generics, mixins, permissions, status
 from core.models import Task
 from core.serializers import TaskSerializer, UserSerializer
 from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
 
 
 class TaskGenericApiView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                         mixins.CreateModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+                         mixins.CreateModelMixin, generics.GenericAPIView):
     serializer_class = TaskSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -51,17 +52,19 @@ def register(request, *args, **kwargs):
 
 @api_view(['PUT'])
 def update(request, *args, **kwargs):
-    queryset = Task.objects.filter(id=kwargs['pk']).first()
+    queryset = get_object_or_404(Task, pk=kwargs['pk'])
     serializer = TaskSerializer(queryset, data=request.data)
-    if queryset:
-        token = request.headers.get('Authorization').split(" ")[1]
-        token_data = Token.objects.get(key=token)
-        if queryset.owner.id == token_data.user.id:
-            if serializer.is_valid():
-                serializer.save(owner=token_data.user)
-                return Response(TaskSerializer(queryset, many=False).data, status=status.HTTP_200_OK)
-            return Response({"detail": f"Bad Request\n{serializer.errors}"}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-    else:
-        return Response({'detail': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    token = request.headers.get('Authorization').split(" ")[1]
+    token_data = Token.objects.get(key=token)
+
+    if queryset.owner.id == token_data.user.id:
+        if serializer.is_valid():
+            serializer.save(owner=token_data.user)
+            return Response(TaskSerializer(queryset, many=False).data, status=status.HTTP_200_OK)
+
+        return Response({"detail": f"Bad Data\n{serializer.errors}"}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+
