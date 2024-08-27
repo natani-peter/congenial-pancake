@@ -15,8 +15,8 @@ POST http://localhost:8000/obtain-token/
 Content-Type: application/json
 
 {
-  "username": "django1",
-  "password": "@Djang0_."
+  "username": "admin",
+  "password": "12345"
 }
 
 > {%

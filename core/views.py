@@ -1,3 +1,4 @@
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .authentication import TokenAuthentication
@@ -8,11 +9,18 @@ from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 
 
+class TaskPagination(PageNumberPagination):
+    page_size = 5  # Number of tasks per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class TaskGenericApiView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                          mixins.CreateModelMixin, generics.GenericAPIView):
     serializer_class = TaskSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = TaskPagination
 
     def get_queryset(self):
         objects = Task.objects.filter(owner=self.request.user)
@@ -66,5 +74,3 @@ def update(request, *args, **kwargs):
         return Response({"detail": f"Bad Data\n{serializer.errors}"}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-
-
